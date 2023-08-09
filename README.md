@@ -60,7 +60,7 @@ To set up and run the project:
 
 Here are some images from the project:
 
-![Employee Data Entry](images/screenshoot1.png)
+![Employee Data Entry](images/screenshot1.png)
 *Employee Data Entry Page*
 
 ![Department Data Entry](images/screenshot2.png)
