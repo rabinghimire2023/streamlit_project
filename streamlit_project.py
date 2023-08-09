@@ -1,49 +1,63 @@
 """Streamlit Project
 """
+import sqlite3
 import streamlit as st
+from database import insert, create_employee,create_department,check_tables_exist
 import pandas as pd
-employee_data = pd.DataFrame(columns=['Empno', 'Ename', 'Job', 'Deptno'])
-department_data = pd.DataFrame(columns=['Deptno', 'Dname', 'Loc'])
+
+
 def employee_page():
     """Employee Page
     """
     st.title("Employee Data Entry")
-    empno = st.text_input("Employee Number (Empno)")
+    empno = st.number_input("Employee Number (Empno)")
     ename = st.text_input("Employee Name (Ename)")
     job = st.text_input("Job")
-    deptno = st.text_input("Department Number(Deptno)")
+    deptno = st.number_input("Department Number(Deptno)")
     if st.button("Submit Employee"):
-        if empno and ename and job and deptno:
-            employee_data.loc[len(employee_data)] = [empno,ename, job, deptno]
-            st.success("Employee data submitted successfully!")
-        else:
-            st.error("Please fill in all fields.")
+        insert("employee", empno,ename,job,deptno)
+        st.success("Employee data submitted successfully!")
+
 def department_page():
     """
     Department Page
     """
     st.title("Department Data Entry")
-    deptno = st.text_input("DepartmentNumber (Deptno)")
+    deptno = st.number_input("DepartmentNumber (Deptno)")
     dname = st.text_input("Department Name (Dname)")
-    loca = st.text_input("Location (loc)")
+    loc = st.text_input("Location (loc)")
     if st.button("Submit department"):
-        if deptno and dname and loca:
-            department_data.loc[len(department_data)] =[deptno, dname, loca]
+        if deptno and dname and loc:
+            insert("department",deptno,dname,loc)
             st.success("Department data submitted successfully!")
         else:
             st.error("Please fill in all fields")
+
+
 def visualize_page():
     """Visualize Page
     """
     st.title("Joined Employee and Department Data")
-    if not employee_data.empty and not department_data.empty:
-        joined_data = employee_data.merge(department_data, on='Deptno', how='left')
+    connection = sqlite3.connect("data.db")
+    join = connection.execute(
+        """SELECT employee.empno,employee.ename,department.deptno, department.dname
+        from employee left join department on employee.deptno = department.deptno
+        """)
+    join = join.fetchall()
+    connection.close()
+    if join:
+        joined_data = pd.DataFrame(join,columns=["Empno","Ename","Departno","dname"])
         st.dataframe(joined_data)
     else:
         st.warning("Please submit data for both employees and departments first.")
+
+
 def main():
     """Main function
     """
+    if not check_tables_exist():
+        create_employee()
+        create_department()
     st.sidebar.title("Navigation")
     page= st.sidebar.radio("Go to",["Employee Data Entry","Department Data Entry","Visualize Data"])
     if page == "Employee Data Entry":
@@ -52,5 +66,7 @@ def main():
         department_page()
     else:
         visualize_page()
+
+
 if __name__ == "__main__":
     main()
